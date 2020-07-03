@@ -24,18 +24,37 @@ tables.forEach(table => {
     var items = data.Items.map(unmarshalItem);
     // console.log(items);
     var filename = dumpdir + '/' + table + '.json'
+    var sqlfile = dumpdir + '/' + table + '.sql'
     console.log('Dumping table', table, "to", filename);
     if (table === 'yummy-place') {
       var scope='ALL_AUTH';
+      try{
+        fs.unlinkSync(sqlfile);
+      }catch(err){
+        console.log("cannot unlink existing sqlfile",sqlfile);
+      }
       items.forEach( ele => {
-            console.log("INSERT INTO PLACE (name,country,lotype,image_url,coordinates,scope) VALUES('"+ele.name+"','"+ele.country +"','"
-                + ele.lotype+ "','"
-                + ele.imageUrl + "',"
-                + "'{" +ele.coordinates[0] + "," + ele.coordinates[1]+ "}','"
-                +scope+"');");
+        var sqlstr = "INSERT INTO PLACE (id,summary,name,country,lotype,image_url,primary_url,coordinates,scope) VALUES("
+                + wrapArg(ele.id)
+                + wrapArg(ele.summary)
+                + wrapArg(ele.name)
+                + wrapArg(ele.country)
+                + wrapArg(ele.lotype)
+                + wrapArg(ele.imageUrl)
+                + wrapArg(ele.primaryUrl)
+                + getCoordinates(ele.coordinates)
+                +"'"+ scope+"') ON CONFLICT (id) DO NOTHING;";
+          console.log(sqlstr);
+            fs.appendFileSync(sqlfile, sqlstr + "\n", function (err) {
+              if (err) return console.log(err);
+              // console.log(items ); // only for debug
+            });
           }
         // console.log("INSERT INTO PLACE (name,country,summary,coordinates,image_url,lotype,scope) VALUES ('some place','de','summary','{4.8234,56.36816}','https://image.url','EXCURS','PUBLIC')");
       );
+    }
+    if (table === 'yummy-region') {
+
     }
     fs.writeFile(filename, JSON.stringify(items), function (err) {
       if (err) return console.log(err);
@@ -44,3 +63,16 @@ tables.forEach(table => {
   });
 });
 
+function wrapArg( arg) {
+  if (arg) {
+    arg = arg.replace(/'/g, "''");
+  }
+  return "'" + arg + "',";
+}
+
+function getCoordinates(coordinates) {
+  if (coordinates[0] && coordinates[1]) {
+    return "'{" +coordinates[0] + "," + coordinates[1]+ "}',";
+  }
+  return "'{NULL,NULL}',";
+}
