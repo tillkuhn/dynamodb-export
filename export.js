@@ -34,7 +34,7 @@ tables.forEach(table => {
         console.log("cannot unlink existing sqlfile",sqlfile);
       }
       items.forEach( ele => {
-        var sqlstr = "INSERT INTO PLACE (id,summary,name,country,lotype,image_url,primary_url,coordinates,scope) VALUES("
+        var sqlstr = "INSERT INTO PLACE (id,summary,name,area_code,location_type,image_url,primary_url,notes,created_at,updated_at,created_by,updated_by,coordinates,auth_scope) VALUES("
                 + wrapArg(ele.id)
                 + wrapArg(ele.summary)
                 + wrapArg(ele.name)
@@ -42,6 +42,11 @@ tables.forEach(table => {
                 + wrapArg(ele.lotype)
                 + wrapArg(ele.imageUrl)
                 + wrapArg(ele.primaryUrl)
+                + wrapArg(ele.notes)
+                + wrapArg(ele.createdAt)
+                + wrapArg(ele.updatedAt)
+                + wrapArg(ele.createdBy)
+                + wrapArg(ele.updatedBy)
                 + getCoordinates(ele.coordinates)
                 +"'"+ scope+"') ON CONFLICT (id) DO NOTHING;";
           console.log(sqlstr);
@@ -74,5 +79,5 @@ function getCoordinates(coordinates) {
   if (coordinates[0] && coordinates[1]) {
     return "'{" +coordinates[0] + "," + coordinates[1]+ "}',";
   }
-  return "'{NULL,NULL}',";
+  return "'{}',";
 }
